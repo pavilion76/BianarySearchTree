@@ -1,4 +1,6 @@
 #include "BST.h"
+#include <queue>
+#include <sstream>
 using namespace std;
 
 BST::BST(){
@@ -103,19 +105,33 @@ bool BST::remove(int data){
 	cout<<"\nremoving "<<data<<endl;
 	if(root==NULL)
 		return false;
+	if(sizeOfTree == 0 && root->getData() == data){
+		delete root;
+		root=NULL;
+		return true;
+	}
 	Node *parent = root;
 	Node *grandParent = parent;
 	while(parent!=NULL || parent->getData() !=data){
 		cout<<"in while loop. parent val "<<parent->getData()<<endl;
 				if(parent->getData() == data){	//we have found what we need to remove
 					cout<<"found the node! "<<parent->getData()<<" == "<<data<<endl;
+					cout<<grandParent->getData()<<endl;
+					cout<<"haha you won't see this\n";
 					if(parent->getRightChild() == NULL && parent->getLeftChild() == NULL){	//if we are removing a leaf
 						cout<<"we are removing a leaf\n";
-						if(grandParent->getRightChild() == parent)
-							grandParent->rightChild == NULL;
-						else if(grandParent->getLeftChild() == parent)
-							grandParent->leftChild == NULL;
+						cout<<"sizeOfTree: "<<sizeOfTree<<endl;
+						if(grandParent->getRightChild() != NULL && grandParent->getRightChild()->getData() == parent->getData()){
+							cout<<"setting: "<<grandParent->rightChild->getData()<<" to NULL\n";
+							grandParent->rightChild = NULL;
+						}else if(grandParent->getLeftChild() != NULL && grandParent->getLeftChild()->getData() == parent->getData()){
+							cout<<"setting: "<<grandParent->leftChild->getData()<<" to NULL\n";
+							grandParent->leftChild = NULL;
+						}
+						cout<<BSTtoString(this);
 						delete parent;
+						cout<<BSTtoString(this);
+						sizeOfTree--;
 						return true;
 					}else if(!(parent->getRightChild() == NULL) != !(parent->getLeftChild() == NULL)){ //if parent only has one child
 						cout<<"we are removing a node with only one child\ngrandParent is "<<grandParent->getData()<<endl;
@@ -131,6 +147,7 @@ bool BST::remove(int data){
 								grandParent->leftChild = parent->getLeftChild();
 							}
 							delete parent;
+							sizeOfTree--;
 							return true;
 						}else if(parent->getLeftChild() == NULL){			//right subtree moves up
 							cout<<"there is no left subtree for "<<parent->getData()<<endl;
@@ -144,7 +161,9 @@ bool BST::remove(int data){
 								grandParent->leftChild = parent->getRightChild();
 							}
 							cout<<";(\n";
+							cout<<BSTtoString(this);
 							delete parent;
+							sizeOfTree--;
 							return true;
 						}
 						cout<<"Hmmm... Something went wrong in the remove function, with only one child.\n";
@@ -160,6 +179,9 @@ bool BST::remove(int data){
 						}else if(grandParent->getLeftChild() == parent){
 							grandParent->leftChild = temp;
 						}
+						sizeOfTree--;
+						delete parent;
+						return true;
 					}	
 				}
 		grandParent = parent;
@@ -172,6 +194,39 @@ bool BST::remove(int data){
 			return false;
 	}
 	return false; // clearly didn't find the node, because it doesn't exist, or this isn't a true BST
+}
+string BST::BSTtoString(BST* bst) {
+	queue<NodeInterface*> readQ; // used to read in the levels of the tree, contains Node*
+	stringstream nodeReader_ss; // used to store the values of the nodes and the level-order sequence
+	int depth = 0; // the depth of a node on the tree
+
+	if (bst->getRootNode() == NULL) {
+		return "BST is empty";
+	}
+
+	readQ.push(bst->getRootNode()); // push the root node of the tree into the queue
+	int x=0;
+	while (!readQ.empty()) { // as long as the queue has a remaining node:
+		//cout<<x++<<endl;
+		int i = readQ.size(); // store the number of nodes on this level of the tree
+		nodeReader_ss << depth << ":  ";
+		for (; i > 0; i--) { // for each node on this level,
+			NodeInterface* nextNode = readQ.front(); // store the next node in the queue
+			nodeReader_ss << nextNode->getData() << " "; // store the data from the node into the ss
+			cout<<nextNode->getData()<<endl;
+			if (nextNode->getLeftChild() != NULL) { // if there is a left child, push the left child into the queue
+				readQ.push(nextNode->getLeftChild());
+			}
+			if (nextNode->getRightChild() != NULL) { // if there is a right child, push the left child into the queue
+				readQ.push(nextNode->getRightChild());
+			}
+			readQ.pop(); // pop the node off of the queue, leaving its children in the queue
+		}
+		nodeReader_ss << "\n"; // push an endl into the ss to distinguish levels
+		depth++;
+	}
+	cout<<"hello!\n";
+	return nodeReader_ss.str();
 }
 void BST::clear(){
 	NodeInterface *parent = root;

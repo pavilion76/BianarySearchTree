@@ -12,6 +12,7 @@ public:
 	NodeInterface* getRootNode() const{
 		return root;
 	}
+	string BSTtoString(BST* bst);
 	virtual bool add(int data);
 	bool add(NodeInterface* tree);
 	virtual bool remove(int data);
