@@ -117,10 +117,8 @@ bool BST::remove(int data){
 				if(parent->getData() == data){	//we have found what we need to remove
 					cout<<"found the node! "<<parent->getData()<<" == "<<data<<endl;
 					cout<<grandParent->getData()<<endl;
-					cout<<"haha you won't see this\n";
 					if(parent->getRightChild() == NULL && parent->getLeftChild() == NULL){	//if we are removing a leaf
 						cout<<"we are removing a leaf\n";
-						cout<<"sizeOfTree: "<<sizeOfTree<<endl;
 						if(grandParent->getRightChild() != NULL && grandParent->getRightChild()->getData() == parent->getData()){
 							cout<<"setting: "<<grandParent->rightChild->getData()<<" to NULL\n";
 							grandParent->rightChild = NULL;
@@ -128,21 +126,20 @@ bool BST::remove(int data){
 							cout<<"setting: "<<grandParent->leftChild->getData()<<" to NULL\n";
 							grandParent->leftChild = NULL;
 						}
-						cout<<BSTtoString(this);
 						delete parent;
-						cout<<BSTtoString(this);
+						//cout<<BSTtoString(this);
 						sizeOfTree--;
 						return true;
 					}else if(!(parent->getRightChild() == NULL) != !(parent->getLeftChild() == NULL)){ //if parent only has one child
 						cout<<"we are removing a node with only one child\ngrandParent is "<<grandParent->getData()<<endl;
 						if(parent->getRightChild() == NULL){				//left subtree moves up
 							cout<<"there is no right child for "<<parent->getData()<<endl;
-							if(grandParent->getRightChild()->getData() == parent->getData()){
+							if(grandParent->getRightChild() == parent){
 								cout<<"R, R\n";
 								cout<<"replacing "<<grandParent->getRightChild()->getData() <<" with "<<parent->getLeftChild()->getData()<<endl;
 								grandParent->rightChild = parent->getLeftChild();
-							}else if(grandParent->getLeftChild()->getData() == parent->getData()){
-								cout<<"L,R\n";
+							}else if(grandParent->getLeftChild() == parent){
+								cout<<"L,R\n1\n";
 								cout<<"replacing "<<grandParent->getLeftChild()->getData() <<" with "<<parent->getLeftChild()->getData()<<endl;
 								grandParent->leftChild = parent->getLeftChild();
 							}
@@ -156,31 +153,118 @@ bool BST::remove(int data){
 								cout<<"replacing "<<grandParent->getRightChild()->getData() <<" with "<<parent->getRightChild()->getData()<<endl;
 								grandParent->rightChild = parent->getRightChild();
 							}else if(grandParent->getLeftChild() == parent){
-								cout<<"L,R\n";
+								cout<<"L,R\n2\n";
 								cout<<"replacing "<<grandParent->getLeftChild()->getData() <<" with "<<parent->getRightChild()->getData()<<endl;
 								grandParent->leftChild = parent->getRightChild();
-							}
+							}else if(grandParent == parent){
+                                cout<<"replacing root "<<parent->getData()<<" with "<<grandParent->getRightChild()->getData()<<endl;
+                                root = parent->getRightChild();
+                            }
 							cout<<";(\n";
-							cout<<BSTtoString(this);
+							//cout<<BSTtoString(this);
 							delete parent;
 							sizeOfTree--;
 							return true;
 						}
 						cout<<"Hmmm... Something went wrong in the remove function, with only one child.\n";
-					}else{																		//if there are two children
+					}else{
+                        cout<<"there should be two children\n";
 						//if there are two children you can get the largest value of the left sub tree to replace it. (lab implimentation)
-						cout<<"there should be two children\n";
+						if(parent->getLeftChild()->getLeftChild() == NULL && parent->getLeftChild()->getRightChild() == NULL && parent != root){
+                            cout<<"no grandchildren on the left side\n";
+                            //if there is no grandchildren on the left subtree,
+                            if(grandParent->getLeftChild() == parent){
+                                grandParent->leftChild = parent->getLeftChild();
+                                parent->getLeftChild()->rightChild = parent->getRightChild();
+                            }else{
+                                grandParent->rightChild = parent->getLeftChild();
+                                parent->getLeftChild()->rightChild = parent->getRightChild();
+                            }
+                            sizeOfTree--;
+                            delete parent;
+                            return true;
+                        }
+						cout<<"parent: "<<parent->getData()<<endl;
+						//Under Construction
+
 						Node* temp = parent->getLeftChild();
-						while(temp->getRightChild() != NULL)
-							temp=temp->getRightChild();
-						//temp is now the value we will be replacing parent with AKA, the largest value (and which by deffinition is a leaf)
+						Node* tempParent = parent;
+						Node* tempGrandParent=parent;
+						while(temp->getRightChild() != NULL){
+							tempGrandParent = tempParent;
+							tempParent=temp;
+							temp=temp->getRightChild();	
+						}
+						//parent is the node we are replacing
+						//temp is the node we are replacing it with
+                        cout<<"temp parent value: "<<tempParent->getData()<<endl;
+						//if(tempParent->getRightChild() != temp){
+							//taking care of tempParent's new right child to replace temp as he goes on to do bigger things *snif*
+                            //this produces an error when removing 6 in file 5, easier to detect and fix later than now....
+                        Node* backup = root->getRightChild();
+                            cout<<"taking care of temp's children\n";
+                        cout<<"parent->rightChild: "<<parent->getRightChild()->getData()<<endl;
+                        if(tempParent != root)
+							tempParent->rightChild = temp->getLeftChild();
+                        else{
+                            temp->rightChild = root->getRightChild();
+                            root = temp;
+                            delete parent;
+                            sizeOfTree--;
+                            return true;
+                        }
+                        cout<<"1\n";
+						//}
 						if(grandParent->getRightChild() == parent){
 							grandParent->rightChild = temp;
 						}else if(grandParent->getLeftChild() == parent){
-							grandParent->leftChild = temp;
-						}
+                            cout<<"replacing left child\n";
+                            grandParent->leftChild = temp;
+						}else if(grandParent == parent && parent == root) {
+                            //this is the case of removing root
+                            //parent->getLeftChild();
+                            cout<<"2\n";
+                            cout<<"parent: "<<parent->getData()<<" temp: "<<temp->getData()<<endl;
+                            temp->rightChild = parent->getRightChild();
+                            cout<<"temp->rightChild "<<temp->getRightChild()->getData()<<endl;
+                            cout<<"2.1\n";
+                            cout<<"parent val: "<<parent->getData()<<" right child "<<parent->getRightChild()->getData()<<endl;//" left child "<<parent->getLeftChild()->getData()<<endl;
+                            if(parent->getLeftChild() == temp){
+                            }else
+                                temp->leftChild = parent->getLeftChild();
+                            if(temp->getRightChild() == temp->getLeftChild()){//fixing my mistake in line 202
+                                cout<<"fixing my mistake from line 202 temp->rightChild is "<<temp->getRightChild()->getData()<<" and now will be "<<backup->getData()<<endl;
+                                temp->rightChild = backup;
+                            }
+                            sizeOfTree--;
+                            root = temp;
+                            cout<<"root: "<<root->getData()<<" left "<<root->getLeftChild()->getData()<<" right "<<root->getRightChild()->getData()<<endl;
+                            delete parent;
+                            return true;
+                        }else if(grandParent == parent){
+                            cout<<"I don't know what is going on, I sincerely hope I never see this\n";
+                        }
+						if(parent->leftChild == temp)
+							temp->leftChild = NULL;	//so temp->left doesn't point to itself
+						else
+							temp->leftChild = parent->getLeftChild();//shouldn't have lost data, thanks to line 204
+						temp->rightChild = parent->getRightChild();
+
+						//^^under construction
+
 						sizeOfTree--;
 						delete parent;
+						cout<<"temp val: "<<temp->getData()<<endl;
+						if(temp->getLeftChild() !=NULL)
+							cout<<"temp left child "<<temp->getLeftChild()->getData()<<endl;
+						else
+							cout<<"temp left child == NULL\n";
+						if(temp->getRightChild() != NULL)
+							cout<<"temp right child "<<temp->getRightChild()->getData()<<endl;
+						else
+							cout<<"temp right child == NULL\n";
+						cout<<"returning true\n";
+						cout<<BSTtoString(this);
 						return true;
 					}	
 				}
@@ -207,7 +291,7 @@ string BST::BSTtoString(BST* bst) {
 	readQ.push(bst->getRootNode()); // push the root node of the tree into the queue
 	int x=0;
 	while (!readQ.empty()) { // as long as the queue has a remaining node:
-		//cout<<x++<<endl;
+		cout<<x++<<endl;
 		int i = readQ.size(); // store the number of nodes on this level of the tree
 		nodeReader_ss << depth << ":  ";
 		for (; i > 0; i--) { // for each node on this level,
@@ -228,7 +312,19 @@ string BST::BSTtoString(BST* bst) {
 	cout<<"hello!\n";
 	return nodeReader_ss.str();
 }
+void BST::recursiveDelete(Node* N){
+	if(N == NULL)
+		return;
+	recursiveDelete(N->getRightChild());
+	recursiveDelete(N->getLeftChild());
+	delete N;
+}
 void BST::clear(){
+	//I'm going to put the BST into an array, then iteratively delete the array
+	recursiveDelete(root);
+	root=NULL;
+	
+/*
 	NodeInterface *parent = root;
 	while(root != NULL){
 		NodeInterface *grandParent = parent;	
@@ -242,5 +338,5 @@ void BST::clear(){
 				parent = parent->getRightChild();
 			}
 		}//now that the Left child is null
-	}
+	}*/
 }
